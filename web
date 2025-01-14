@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meine Einfache Webseite</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Willkommen bei AP-Graphics</h1>
+    <p>Hier ist eine einfache Webseite mit nur Text.</p>
+    <p>Danke für den Besuch!</p>
+</body>
+</html>
