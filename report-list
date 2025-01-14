@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HERACLES FUND - Annual & Interim Reports</title>
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            background-color: #ffffff;
+            color: #000000;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            margin-top: 20px;
+            font-size: 24px;
+        }
+        hr {
+            margin: 20px auto;
+            width: 90%;
+            border: 0;
+            border-top: 1px solid #000000;
+        }
+        a {
+            color: #800080; /* Lila für Links */
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        p {
+            font-size: 12px;
+        }
+        .report-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .report-list li {
+            margin: 10px 0;
+        }
+        .report-list a {
+            display: block;
+            padding: 10px;
+            background-color: #f3f3f3;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .report-list a:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <h1>HERACLES FUND</h1>
+    <p>123 Main Street<br>City, Country 12345<br>Official Home Page</p>
+    <hr>
+    <ul style="list-style: none; padding: 0;">
+        <li><a href="founder.html">A Message from Alessandro P.</a></li>
+        <li><a href="#">Annual & Interim Reports</a></li>
+        <li><a href="#">Link to Financial Filings</a></li>
+        <li><a href="#">Corporate Governance</a></li>
+        <li><a href="#">Investment Philosophy</a></li>
+        <li><a href="#">Sustainability</a></li>
+    </ul>
+    <hr>
+
+    <h2>Annual & Interim Reports</h2>
+    <p>Below you can find the latest annual and interim reports for HERACLES FUND.</p>
+
+    <ul class="report-list">
+        <li><a href="reports/annual_report_2024.pdf" target="_blank">Annual Report 2024</a></li>
+        <li><a href="reports/interim_report_q3_2024.pdf" target="_blank">Interim Report Q3 2024</a></li>
+        <li><a href="reports/annual_report_2023.pdf" target="_blank">Annual Report 2023</a></li>
+        <li><a href="reports/interim_report_q2_2023.pdf" target="_blank">Interim Report Q2 2023</a></li>
+    </ul>
+
+    <hr>
+    <p>If you have any comments about our web page, you can write to us at the address shown above.<br>
+    However, due to the limited number of personnel in our corporate office, we are unable to provide a direct response.</p>
+    <hr>
+    <p>Copyright © 2024-2025 HERACLES FUND</p>
+</body>
+</html>
