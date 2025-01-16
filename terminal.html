@@ -51,86 +51,128 @@
             background-color: rgba(255, 73, 118, 0.1);
             border-radius: 4px;
         }
+
+        .loading {
+            color: #888;
+            margin: 10px;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
     <input type="text" id="tickerInput" placeholder="Ticker eingeben (z.B. AAPL) und Enter drücken">
     <div id="errorMessage" class="error" style="display: none;"></div>
+    <div id="loadingMessage" class="loading" style="display: none;">Laden...</div>
 
     <script>
-        const API_KEY = 'f8d8515321msh5962f03ad4bb432p1294c5jsn10b6a5493c8d';
-        const API_HOST = 'yahoo-finance15.p.rapidapi.com';
+        const API_KEY = 'H0TXRFYO7L6D06KU';
 
-        // Funktion zum Abrufen der Daten
+        // Funktion zum Abrufen der Daten von Alpha Vantage
         async function fetchStockData(ticker) {
-            const url = `https://${API_HOST}/api/yahoo/qu/quote/${ticker}`;
-
-            const headers = {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'x-rapidapi-ua': 'RapidAPI-Playground',
-                'x-rapidapi-key': API_KEY,
-                'x-rapidapi-host': API_HOST
-            };
+            const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${API_KEY}`;
+            
+            const loadingMessage = document.getElementById('loadingMessage');
+            loadingMessage.style.display = 'block';
 
             try {
-                const response = await fetch(url, { headers });
+                const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error('Fehler beim Abrufen der Daten.');
+                    throw new Error('Netzwerkfehler');
                 }
+                
                 const data = await response.json();
-                return data[0];
+                
+                if (data['Global Quote'] && Object.keys(data['Global Quote']).length > 0) {
+                    const quote = data['Global Quote'];
+                    return {
+                        symbol: quote['01. symbol'],
+                        price: parseFloat(quote['05. price']),
+                        changePercent: parseFloat(quote['10. change percent'].replace('%', '')),
+                        volume: quote['06. volume']
+                    };
+                } else {
+                    throw new Error('Ticker nicht gefunden');
+                }
             } catch (error) {
-                throw new Error('Ticker nicht gefunden oder API-Fehler.');
+                throw new Error('Ticker nicht gefunden oder API-Limit erreicht (max. 5 Anfragen pro Minute)');
+            } finally {
+                loadingMessage.style.display = 'none';
             }
         }
 
         // Funktion zum Erstellen einer verschiebbaren Box
-        function createDraggableBox(ticker, price, changePercent) {
+        function createDraggableBox(data) {
             const box = document.createElement('div');
             box.className = 'draggable';
             box.innerHTML = `
-                <strong>${ticker}</strong><br>
-                Preis: ${price.toFixed(2)}<br>
-                Veränderung: <span class="${changePercent >= 0 ? 'positive' : 'negative'}">
-                    ${changePercent.toFixed(2)}%</span>
+                <strong>${data.symbol}</strong><br>
+                Preis: $${data.price.toFixed(2)}<br>
+                Veränderung: <span class="${data.changePercent >= 0 ? 'positive' : 'negative'}">
+                    ${data.changePercent >= 0 ? '+' : ''}${data.changePercent.toFixed(2)}%</span><br>
+                Volume: ${parseInt(data.volume).toLocaleString()}
             `;
+
+            // Position zufällig im sichtbaren Bereich
+            const margin = 20;
+            const maxX = window.innerWidth - 220; // Box width + margin
+            const maxY = window.innerHeight - 100; // Box height + margin
+            const randomX = Math.max(margin, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(margin, Math.floor(Math.random() * maxY));
+            
+            box.style.left = `${randomX}px`;
+            box.style.top = `${randomY}px`;
 
             document.body.appendChild(box);
 
-            let offsetX = 0;
-            let offsetY = 0;
             let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
 
-            box.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                offsetX = e.offsetX;
-                offsetY = e.offsetY;
-            });
+            box.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
 
-            window.addEventListener('mousemove', (e) => {
-                if (isDragging) {
-                    box.style.left = `${e.clientX - offsetX}px`;
-                    box.style.top = `${e.clientY - offsetY}px`;
+            function dragStart(e) {
+                if (e.target === box) {
+                    isDragging = true;
+                    initialX = e.clientX - box.offsetLeft;
+                    initialY = e.clientY - box.offsetTop;
                 }
-            });
+            }
 
-            window.addEventListener('mouseup', () => {
+            function drag(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    box.style.left = `${currentX}px`;
+                    box.style.top = `${currentY}px`;
+                }
+            }
+
+            function dragEnd(e) {
                 isDragging = false;
-            });
+            }
         }
 
         // Event-Listener für Ticker-Eingabe
         document.getElementById('tickerInput').addEventListener('keypress', async function (e) {
             if (e.key === 'Enter') {
-                const ticker = this.value.toUpperCase();
+                const ticker = this.value.trim().toUpperCase();
                 const errorMessage = document.getElementById('errorMessage');
+                
+                if (!ticker) {
+                    return;
+                }
 
                 errorMessage.style.display = 'none';
-
+                
                 try {
                     const stockData = await fetchStockData(ticker);
-                    createDraggableBox(ticker, stockData.regularMarketPrice, stockData.regularMarketChangePercent);
+                    createDraggableBox(stockData);
+                    this.value = ''; // Input leeren nach erfolgreicher Abfrage
                 } catch (error) {
                     errorMessage.textContent = error.message;
                     errorMessage.style.display = 'block';
