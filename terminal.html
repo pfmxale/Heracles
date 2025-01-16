@@ -34,6 +34,8 @@
             resize: both;
             overflow: auto;
             cursor: move;
+            display: flex;
+            flex-direction: column;
         }
 
         .positive {
@@ -56,6 +58,20 @@
             color: #888;
             margin: 10px;
             padding: 10px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            display: none;
+            color: #ff4976;
+        }
+
+        .draggable:hover .close-btn {
+            display: block;
         }
     </style>
 </head>
@@ -104,13 +120,23 @@
         function createDraggableBox(data) {
             const box = document.createElement('div');
             box.className = 'draggable';
-            box.innerHTML = `
+            box.innerHTML = `                
                 <strong>${data.symbol}</strong><br>
                 Preis: $${data.price.toFixed(2)}<br>
                 Veränderung: <span class="${data.changePercent >= 0 ? 'positive' : 'negative'}">
                     ${data.changePercent >= 0 ? '+' : ''}${data.changePercent.toFixed(2)}%</span><br>
                 Volume: ${parseInt(data.volume).toLocaleString()}
             `;
+
+            // Close button
+            const closeButton = document.createElement('span');
+            closeButton.className = 'close-btn';
+            closeButton.innerHTML = '×';
+            closeButton.addEventListener('click', () => {
+                box.remove(); // Box entfernen, wenn auf das Kreuz geklickt wird
+            });
+
+            box.appendChild(closeButton);
 
             // Position zufällig im sichtbaren Bereich
             const margin = 20;
