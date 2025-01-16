@@ -2,136 +2,21 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Terminal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lightweight-charts/4.1.1/lightweight-charts.standalone.production.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #1e222d;
-            color: #ffffff;
-        }
-        
-        .container {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
-            height: 100vh;
-        }
-        
-        .quote-monitor {
-            background-color: #131722;
-            padding: 15px;
-            border-radius: 4px;
-        }
-        
-        .chart-container {
-            background-color: #131722;
-            padding: 15px;
-            border-radius: 4px;
-            height: 600px;
-            position: relative;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        
-        th, td {
-            padding: 8px;
-            text-align: right;
-            border-bottom: 1px solid #2a2e39;
-        }
-        
-        th {
-            background-color: #2a2e39;
-            text-align: left;
-        }
-        
-        th:not(:first-child) {
-            text-align: right;
-        }
-        
-        .negative {
-            color: #ff4976;
-        }
-        
-        .positive {
-            color: #26a69a;
-        }
-        
-        #tickerInput {
-            width: calc(100% - 16px);
-            padding: 8px;
-            margin-bottom: 15px;
-            background-color: #2a2e39;
-            border: 1px solid #363c4e;
-            color: white;
-            border-radius: 4px;
-        }
-        
-        .quote-result {
-            background-color: #1e222d;
-            border: 1px solid #2a2e39;
-            padding: 15px;
-            margin-top: 10px;
-            border-radius: 4px;
-            display: none;
-        }
-        
-        .quote-result.active {
-            display: block;
-        }
-        
-        .quote-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .quote-symbol {
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
-        .quote-price {
-            font-size: 24px;
-            margin: 10px 0;
-        }
-        
-        .quote-change {
-            font-size: 16px;
-        }
-        
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            display: none;
-        }
-
-        .error {
-            color: #ff4976;
-            padding: 10px;
-            margin-top: 10px;
-            background-color: rgba(255, 73, 118, 0.1);
-            border-radius: 4px;
-            display: none;
-        }
-
-        .clickable {
-            cursor: pointer;
-        }
-
-        .clickable:hover {
-            background-color: #2a2e39;
-        }
+        /* Styling wie in deinem Originalcode */
+        body { margin: 0; padding: 20px; font-family: sans-serif; background-color: #1e222d; color: #ffffff; }
+        .container { display: grid; grid-template-columns: 300px 1fr; gap: 20px; height: 100vh; }
+        .quote-monitor, .chart-container { background-color: #131722; padding: 15px; border-radius: 4px; }
+        .chart-container { height: 600px; position: relative; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 8px; text-align: right; border-bottom: 1px solid #2a2e39; }
+        th { background-color: #2a2e39; text-align: left; }
+        .positive { color: #26a69a; } .negative { color: #ff4976; }
+        #tickerInput { width: 100%; padding: 8px; margin-bottom: 15px; background-color: #2a2e39; color: white; border: 1px solid #363c4e; border-radius: 4px; }
+        .error { color: #ff4976; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -140,24 +25,15 @@
             <input type="text" id="tickerInput" placeholder="Symbol eingeben... (z.B. AAPL)">
             <div id="errorMessage" class="error"></div>
             <div id="quoteResult" class="quote-result">
-                <div class="quote-header">
-                    <span id="quoteSymbol" class="quote-symbol"></span>
-                    <span id="quoteVolume"></span>
-                </div>
+                <div id="quoteSymbol" class="quote-symbol"></div>
                 <div id="quotePrice" class="quote-price"></div>
                 <div id="quoteChange" class="quote-change"></div>
             </div>
             <table>
                 <thead>
-                    <tr>
-                        <th>Symbol</th>
-                        <th>Preis</th>
-                        <th>Chg %</th>
-                        <th>Vol</th>
-                    </tr>
+                    <tr><th>Symbol</th><th>Preis</th><th>Chg %</th><th>Vol</th></tr>
                 </thead>
-                <tbody id="stockList">
-                </tbody>
+                <tbody id="stockList"></tbody>
             </table>
         </div>
         <div class="chart-container" id="chart">
@@ -167,168 +43,93 @@
 
     <script>
         const API_KEY = 'H0TXRFYO7L6D06KU';
-        let watchlist = new Set(['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META']);
-        
-        // Chart initialisieren
-        const chart = LightweightCharts.createChart(document.getElementById('chart'), {
-            layout: {
-                background: { color: '#131722' },
-                textColor: '#d1d4dc',
-            },
-            grid: {
-                vertLines: { color: '#2a2e39' },
-                horzLines: { color: '#2a2e39' },
-            },
-            rightPriceScale: {
-                borderColor: '#2a2e39',
-            },
-            timeScale: {
-                borderColor: '#2a2e39',
-            },
+        let watchlist = new Set(['AAPL', 'MSFT', 'GOOGL', 'AMZN']);
+
+        const chartContainer = document.getElementById('chart');
+        const chart = LightweightCharts.createChart(chartContainer, {
+            layout: { background: { color: '#131722' }, textColor: '#d1d4dc' },
+            grid: { vertLines: { color: '#2a2e39' }, horzLines: { color: '#2a2e39' } },
+            timeScale: { borderColor: '#2a2e39' },
+            rightPriceScale: { borderColor: '#2a2e39' }
         });
 
         const candleSeries = chart.addCandlestickSeries();
 
-        // Funktion zum Formatieren von Zahlen
-        function formatNumber(num) {
-            if (num >= 1e6) {
-                return (num / 1e6).toFixed(1) + 'M';
-            } else if (num >= 1e3) {
-                return (num / 1e3).toFixed(1) + 'K';
-            }
-            return num.toString();
-        }
-
-        // Funktion zum Abrufen der Echtzeitdaten
         async function fetchQuote(symbol) {
             try {
                 const response = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`);
                 const data = await response.json();
-                
-                if (data['Global Quote']) {
-                    const quote = data['Global Quote'];
-                    return {
-                        symbol: quote['01. symbol'],
-                        price: parseFloat(quote['05. price']),
-                        change: parseFloat(quote['09. change']),
-                        changePercent: parseFloat(quote['10. change percent'].replace('%', '')),
-                        volume: quote['06. volume']
-                    };
-                }
-                throw new Error('Keine Daten verfügbar');
+                const quote = data['Global Quote'];
+                if (!quote) throw new Error('Symbol nicht gefunden');
+                return {
+                    symbol: quote['01. symbol'],
+                    price: parseFloat(quote['05. price']),
+                    change: parseFloat(quote['09. change']),
+                    changePercent: parseFloat(quote['10. change percent'].replace('%', '')),
+                    volume: parseInt(quote['06. volume'], 10)
+                };
             } catch (error) {
-                throw error;
+                throw new Error('Fehler beim Abrufen des Symbols');
             }
         }
 
-        // Funktion zum Abrufen der Chartdaten
         async function fetchChartData(symbol) {
-            const loading = document.getElementById('loading');
-            loading.style.display = 'block';
-
             try {
                 const response = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${API_KEY}`);
                 const data = await response.json();
-
-                if (data['Time Series (Daily)']) {
-                    const chartData = Object.entries(data['Time Series (Daily)']).map(([date, values]) => ({
-                        time: new Date(date).getTime() / 1000,
-                        open: parseFloat(values['1. open']),
-                        high: parseFloat(values['2. high']),
-                        low: parseFloat(values['3. low']),
-                        close: parseFloat(values['4. close'])
-                    })).reverse();
-
-                    candleSeries.setData(chartData);
-                }
+                const timeSeries = data['Time Series (Daily)'];
+                if (!timeSeries) throw new Error('Chart-Daten nicht verfügbar');
+                const chartData = Object.keys(timeSeries).map(date => ({
+                    time: date,
+                    open: parseFloat(timeSeries[date]['1. open']),
+                    high: parseFloat(timeSeries[date]['2. high']),
+                    low: parseFloat(timeSeries[date]['3. low']),
+                    close: parseFloat(timeSeries[date]['4. close'])
+                })).reverse();
+                candleSeries.setData(chartData);
             } catch (error) {
-                console.error('Fehler beim Laden der Chartdaten:', error);
-            } finally {
-                loading.style.display = 'none';
+                console.error(error.message);
             }
         }
 
-        // Funktion zum Aktualisieren der Quote-Anzeige
-        function updateQuoteDisplay(quote) {
-            const quoteResult = document.getElementById('quoteResult');
-            const quoteSymbol = document.getElementById('quoteSymbol');
-            const quotePrice = document.getElementById('quotePrice');
-            const quoteChange = document.getElementById('quoteChange');
-            const quoteVolume = document.getElementById('quoteVolume');
-
-            quoteSymbol.textContent = quote.symbol;
-            quotePrice.textContent = quote.price.toFixed(2);
-            quoteChange.textContent = `${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toFixed(2)}% (${quote.change.toFixed(2)})`;
-            quoteVolume.textContent = `Vol: ${formatNumber(parseInt(quote.volume))}`;
-
-            quoteChange.className = `quote-change ${quote.changePercent >= 0 ? 'positive' : 'negative'}`;
-            quoteResult.classList.add('active');
-
-            // Zur Watchlist hinzufügen
-            watchlist.add(quote.symbol);
-            updateWatchlist();
+        async function updateQuoteDisplay(symbol) {
+            try {
+                const quote = await fetchQuote(symbol);
+                document.getElementById('quoteSymbol').textContent = quote.symbol;
+                document.getElementById('quotePrice').textContent = `Preis: ${quote.price.toFixed(2)}`;
+                const changeClass = quote.changePercent >= 0 ? 'positive' : 'negative';
+                document.getElementById('quoteChange').textContent = `Änderung: ${quote.changePercent.toFixed(2)}%`;
+                document.getElementById('quoteChange').className = changeClass;
+                fetchChartData(symbol);
+            } catch (error) {
+                document.getElementById('errorMessage').textContent = error.message;
+            }
         }
 
-        // Funktion zum Aktualisieren der Watchlist
-        async function updateWatchlist() {
+        document.getElementById('tickerInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') {
+                const symbol = e.target.value.toUpperCase();
+                if (symbol) updateQuoteDisplay(symbol);
+            }
+        });
+
+        // Watchlist aktualisieren
+        async function loadWatchlist() {
             const stockList = document.getElementById('stockList');
             stockList.innerHTML = '';
-
             for (const symbol of watchlist) {
                 try {
                     const quote = await fetchQuote(symbol);
                     const row = document.createElement('tr');
-                    row.className = 'clickable';
-                    row.innerHTML = `
-                        <td>${quote.symbol}</td>
-                        <td>${quote.price.toFixed(2)}</td>
-                        <td class="${quote.changePercent >= 0 ? 'positive' : 'negative'}">${quote.changePercent >= 0 ? '+' : ''}${quote.changePercent.toFixed(2)}%</td>
-                        <td>${formatNumber(parseInt(quote.volume))}</td>
-                    `;
-                    
-                    row.addEventListener('click', () => {
-                        document.getElementById('tickerInput').value = quote.symbol;
-                        updateQuoteDisplay(quote);
-                        fetchChartData(quote.symbol);
-                    });
-                    
+                    row.innerHTML = `<td>${quote.symbol}</td><td>${quote.price.toFixed(2)}</td><td>${quote.changePercent.toFixed(2)}%</td><td>${quote.volume}</td>`;
                     stockList.appendChild(row);
                 } catch (error) {
-                    console.error(`Fehler beim Laden von ${symbol}:`, error);
+                    console.error(`Fehler bei ${symbol}:`, error.message);
                 }
             }
         }
 
-        // Event Listener für Ticker-Input
-        document.getElementById('tickerInput').addEventListener('keypress', async function(e) {
-            if (e.key === 'Enter') {
-                const symbol = this.value.toUpperCase();
-                const errorMessage = document.getElementById('errorMessage');
-                
-                if (symbol) {
-                    try {
-                        errorMessage.style.display = 'none';
-                        const quote = await fetchQuote(symbol);
-                        updateQuoteDisplay(quote);
-                        fetchChartData(symbol);
-                    } catch (error) {
-                        errorMessage.textContent = 'Symbol nicht gefunden oder API-Limit erreicht';
-                        errorMessage.style.display = 'block';
-                    }
-                }
-            }
-        });
-
-        // Chart responsive machen
-        window.addEventListener('resize', () => {
-            chart.applyOptions({
-                width: document.querySelector('.chart-container').clientWidth,
-                height: document.querySelector('.chart-container').clientHeight
-            });
-        });
-
-        // Initial die Watchlist laden
-        updateWatchlist();
+        loadWatchlist();
     </script>
 </body>
 </html>
