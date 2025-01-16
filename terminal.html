@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Terminal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightweight-charts/4.1.1/lightweight-charts.standalone.production.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1e222d;
+            color: #ffffff;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: 100vh;
+        }
+        
+        .quote-monitor {
+            background-color: #131722;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        
+        .chart-container {
+            background-color: #131722;
+            padding: 15px;
+            border-radius: 4px;
+            height: 600px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: right;
+            border-bottom: 1px solid #2a2e39;
+        }
+        
+        th {
+            background-color: #2a2e39;
+        }
+        
+        .negative {
+            color: #ff4976;
+        }
+        
+        .positive {
+            color: #26a69a;
+        }
+        
+        #tickerInput {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            background-color: #2a2e39;
+            border: 1px solid #363c4e;
+            color: white;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="quote-monitor">
+            <input type="text" id="tickerInput" placeholder="Symbol eingeben...">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Last</th>
+                        <th>Chg %</th>
+                        <th>Vol</th>
+                    </tr>
+                </thead>
+                <tbody id="stockList">
+                </tbody>
+            </table>
+        </div>
+        <div class="chart-container" id="chart"></div>
+    </div>
+
+    <script>
+        // Beispiel-Aktien
+        const stocks = [
+            { symbol: 'AAPL', price: 229.10, change: -1.69, volume: '48.4M' },
+            { symbol: 'MSFT', price: 426.68, change: 0.09, volume: '9.5M' },
+            { symbol: 'GOOGL', price: 193.77, change: -0.91, volume: '11.4M' },
+            { symbol: 'META', price: 613.70, change: -0.55, volume: '5.7M' },
+            { symbol: 'NVDA', price: 135.20, change: -0.76, volume: '164.7M' }
+        ];
+
+        // Chart initialisieren
+        const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+            layout: {
+                background: { color: '#131722' },
+                textColor: '#d1d4dc',
+            },
+            grid: {
+                vertLines: { color: '#2a2e39' },
+                horzLines: { color: '#2a2e39' },
+            },
+            rightPriceScale: {
+                borderColor: '#2a2e39',
+            },
+            timeScale: {
+                borderColor: '#2a2e39',
+            },
+        });
+
+        const candleSeries = chart.addCandlestickSeries();
+
+        // Beispiel-Chartdaten
+        function generateDummyData() {
+            const data = [];
+            let time = new Date('2024-01-01').getTime();
+            let price = 100;
+            
+            for (let i = 0; i < 100; i++) {
+                const open = price + Math.random() * 10 - 5;
+                const high = open + Math.random() * 5;
+                const low = open - Math.random() * 5;
+                const close = (open + high + low) / 3;
+                
+                data.push({
+                    time: time / 1000,
+                    open: open,
+                    high: high,
+                    low: low,
+                    close: close
+                });
+                
+                price = close;
+                time += 24 * 60 * 60 * 1000;
+            }
+            
+            return data;
+        }
+
+        candleSeries.setData(generateDummyData());
+
+        // Aktientabelle erstellen
+        function updateStockList() {
+            const stockList = document.getElementById('stockList');
+            stockList.innerHTML = '';
+            
+            stocks.forEach(stock => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${stock.symbol}</td>
+                    <td>${stock.price.toFixed(2)}</td>
+                    <td class="${stock.change >= 0 ? 'positive' : 'negative'}">${stock.change >= 0 ? '+' : ''}${stock.change}%</td>
+                    <td>${stock.volume}</td>
+                `;
+                stockList.appendChild(row);
+            });
+        }
+
+        updateStockList();
+
+        // Event Listener für Ticker-Input
+        document.getElementById('tickerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const ticker = this.value.toUpperCase();
+                // Hier würde normalerweise ein API-Call erfolgen
+                candleSeries.setData(generateDummyData());
+                this.value = '';
+            }
+        });
+
+        // Chart responsive machen
+        window.addEventListener('resize', () => {
+            chart.applyOptions({
+                width: document.querySelector('.chart-container').clientWidth,
+                height: document.querySelector('.chart-container').clientHeight
+            });
+        });
+    </script>
+</body>
+</html>
