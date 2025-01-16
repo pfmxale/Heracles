@@ -66,12 +66,29 @@
             color: white;
             border-radius: 4px;
         }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            display: none;
+        }
+
+        .error {
+            color: #ff4976;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="quote-monitor">
-            <input type="text" id="tickerInput" placeholder="Symbol eingeben...">
+            <input type="text" id="tickerInput" placeholder="Symbol eingeben... (z.B. AAPL)">
+            <div id="errorMessage" class="error"></div>
             <table>
                 <thead>
                     <tr>
@@ -85,11 +102,16 @@
                 </tbody>
             </table>
         </div>
-        <div class="chart-container" id="chart"></div>
+        <div class="chart-container" id="chart">
+            <div id="loading">Laden...</div>
+        </div>
     </div>
 
     <script>
-        // Beispiel-Aktien
+        // API Key für Alpha Vantage (Bitte ersetzen Sie dies mit Ihrem eigenen API Key)
+        const API_KEY = 'H0TXRFYO7L6D06KU';
+        
+        // Beispiel-Aktien für die Liste
         const stocks = [
             { symbol: 'AAPL', price: 229.10, change: -1.69, volume: '48.4M' },
             { symbol: 'MSFT', price: 426.68, change: 0.09, volume: '9.5M' },
@@ -118,34 +140,60 @@
 
         const candleSeries = chart.addCandlestickSeries();
 
-        // Beispiel-Chartdaten
-        function generateDummyData() {
-            const data = [];
-            let time = new Date('2024-01-01').getTime();
-            let price = 100;
+        // Funktion zum Abrufen der Aktiendaten
+        async function fetchStockData(symbol) {
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
             
-            for (let i = 0; i < 100; i++) {
-                const open = price + Math.random() * 10 - 5;
-                const high = open + Math.random() * 5;
-                const low = open - Math.random() * 5;
-                const close = (open + high + low) / 3;
+            loading.style.display = 'block';
+            errorMessage.style.display = 'none';
+
+            try {
+                const response = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${API_KEY}`);
+                const data = await response.json();
+
+                if (data['Error Message']) {
+                    throw new Error('Ungültiges Symbol oder API-Limit erreicht');
+                }
+
+                const timeSeriesData = data['Time Series (Daily)'];
+                if (!timeSeriesData) {
+                    throw new Error('Keine Daten verfügbar');
+                }
+
+                const chartData = Object.entries(timeSeriesData).map(([date, values]) => ({
+                    time: new Date(date).getTime() / 1000,
+                    open: parseFloat(values['1. open']),
+                    high: parseFloat(values['2. high']),
+                    low: parseFloat(values['3. low']),
+                    close: parseFloat(values['4. close'])
+                })).reverse();
+
+                candleSeries.setData(chartData);
                 
-                data.push({
-                    time: time / 1000,
-                    open: open,
-                    high: high,
-                    low: low,
-                    close: close
+                // Aktualisiere auch die Watchlist mit dem neuen Symbol
+                const latestPrice = parseFloat(Object.values(timeSeriesData)[0]['4. close']);
+                const previousPrice = parseFloat(Object.values(timeSeriesData)[1]['4. close']);
+                const change = ((latestPrice - previousPrice) / previousPrice * 100).toFixed(2);
+                
+                // Füge das neue Symbol zur Watchlist hinzu
+                stocks.unshift({
+                    symbol: symbol,
+                    price: latestPrice,
+                    change: parseFloat(change),
+                    volume: Object.values(timeSeriesData)[0]['5. volume']
                 });
                 
-                price = close;
-                time += 24 * 60 * 60 * 1000;
-            }
-            
-            return data;
-        }
+                // Aktualisiere die Anzeige
+                updateStockList();
 
-        candleSeries.setData(generateDummyData());
+            } catch (error) {
+                errorMessage.textContent = error.message;
+                errorMessage.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
 
         // Aktientabelle erstellen
         function updateStockList() {
@@ -156,10 +204,18 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${stock.symbol}</td>
-                    <td>${stock.price.toFixed(2)}</td>
-                    <td class="${stock.change >= 0 ? 'positive' : 'negative'}">${stock.change >= 0 ? '+' : ''}${stock.change}%</td>
+                    <td>${typeof stock.price === 'number' ? stock.price.toFixed(2) : stock.price}</td>
+                    <td class="${stock.change >= 0 ? 'positive' : 'negative'}">${stock.change >= 0 ? '+' : ''}${typeof stock.change === 'number' ? stock.change.toFixed(2) : stock.change}%</td>
                     <td>${stock.volume}</td>
                 `;
+                
+                // Clickable rows
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', () => {
+                    fetchStockData(stock.symbol);
+                    document.getElementById('tickerInput').value = stock.symbol;
+                });
+                
                 stockList.appendChild(row);
             });
         }
@@ -170,9 +226,9 @@
         document.getElementById('tickerInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 const ticker = this.value.toUpperCase();
-                // Hier würde normalerweise ein API-Call erfolgen
-                candleSeries.setData(generateDummyData());
-                this.value = '';
+                if (ticker) {
+                    fetchStockData(ticker);
+                }
             }
         });
 
@@ -183,6 +239,9 @@
                 height: document.querySelector('.chart-container').clientHeight
             });
         });
+
+        // Initial einen Standardwert laden
+        fetchStockData('AAPL');
     </script>
 </body>
 </html>
