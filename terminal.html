@@ -42,6 +42,8 @@
             resize: both;
             overflow: auto;
             cursor: move;
+            min-width: 200px;
+            min-height: 100px;
         }
 
         .close-button {
@@ -72,17 +74,32 @@
             margin-bottom: 10px;
         }
 
-        .chart-header span {
-            font-size: 16px;
-            font-weight: bold;
+        .stock-info {
+            padding: 15px;
+            color: white;
         }
 
-        .chart-header select {
-            background-color: #2a2e39;
-            color: white;
-            border: 1px solid #444;
-            padding: 5px;
-            border-radius: 4px;
+        .stock-ticker {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stock-price {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .stock-change {
+            font-size: 16px;
+        }
+
+        .positive-change {
+            color: #4caf50;
+        }
+
+        .negative-change {
+            color: #f44336;
         }
     </style>
 </head>
@@ -127,6 +144,43 @@
             addDragAndCloseFunctionality(container);
         }
 
+        // Funktion zum Erstellen einer Info-Box
+        async function createBox(ticker) {
+            const container = document.createElement('div');
+            container.className = 'draggable';
+            container.innerHTML = `
+                <div class="close-button">X</div>
+                <div class="stock-info">
+                    <div class="stock-ticker">${ticker}</div>
+                    <div class="stock-price">Laden...</div>
+                    <div class="stock-change">Laden...</div>
+                </div>
+            `;
+            document.body.appendChild(container);
+            addDragAndCloseFunctionality(container);
+
+            try {
+                // Fetch Aktiendaten von der Finnhub API (Sie müssen Ihren API-Key einfügen)
+                const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=IHR_API_KEY`);
+                const data = await response.json();
+
+                if (data.c) {
+                    const priceElement = container.querySelector('.stock-price');
+                    const changeElement = container.querySelector('.stock-change');
+                    
+                    priceElement.textContent = `$${data.c.toFixed(2)}`;
+                    
+                    const changePercent = ((data.c - data.pc) / data.pc * 100).toFixed(2);
+                    const changeClass = changePercent >= 0 ? 'positive-change' : 'negative-change';
+                    changeElement.textContent = `${changePercent}%`;
+                    changeElement.className = `stock-change ${changeClass}`;
+                }
+            } catch (error) {
+                container.querySelector('.stock-price').textContent = 'Fehler beim Laden';
+                container.querySelector('.stock-change').textContent = 'Nicht verfügbar';
+            }
+        }
+
         // Funktion für Dragging und Schließen
         function addDragAndCloseFunctionality(element) {
             const closeButton = element.querySelector('.close-button');
@@ -168,6 +222,8 @@
 
                 if (selection === 'chart') {
                     createChart(ticker);
+                } else if (selection === 'box') {
+                    createBox(ticker);
                 }
             }
         });
