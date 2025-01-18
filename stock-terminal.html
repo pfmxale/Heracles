@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Terminal</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <input type="text" id="tickerInput" placeholder="Ticker eingeben (z.B. AAPL) und Enter drücken">
@@ -13,10 +13,14 @@
         <option value="chart">Chart anzeigen</option>
     </select>
 
+    <!-- Scripts in der richtigen Reihenfolge laden -->
     <script src="https://s3.tradingview.com/tv.js"></script>
-    <script src="js/windowManager.js"></script>
-    <script src="js/chartComponent.js"></script>
-    <script src="js/boxComponent.js"></script>
-    <script src="js/app.js"></script>
+    <!-- Erst WindowManager, da andere Komponenten davon abhängen -->
+    <script src="windowManager.js"></script>
+    <!-- Dann die Komponenten -->
+    <script src="chartComponent.js"></script>
+    <script src="boxComponent.js"></script>
+    <!-- Zum Schluss die App-Logik -->
+    <script src="app.js"></script>
 </body>
 </html>
