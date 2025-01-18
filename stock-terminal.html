@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Terminal</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <input type="text" id="tickerInput" placeholder="Ticker eingeben (z.B. AAPL) und Enter drücken">
+    <select id="selection" class="dropdown">
+        <option value="box">Box anzeigen</option>
+        <option value="chart">Chart anzeigen</option>
+    </select>
+
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script src="js/windowManager.js"></script>
+    <script src="js/chartComponent.js"></script>
+    <script src="js/boxComponent.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
