@@ -1,1 +1,104 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #1e222d;
+    color: white;
+}
 
+#tickerInput {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 10px;
+    background-color: #2a2e39;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+}
+
+.dropdown {
+    background-color: #2a2e39;
+    border: 1px solid #444;
+    color: white;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px;
+}
+
+.draggable, .chart-container {
+    position: absolute;
+    top: 100px;
+    left: 100px;
+    padding: 10px;
+    border: 1px solid #444;
+    background-color: #2a2e39;
+    border-radius: 5px;
+    overflow: hidden;
+    cursor: move;
+    min-width: 200px;
+    min-height: 100px;
+}
+
+.resize-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #666;
+    border-radius: 50%;
+}
+
+.resize-handle.top-left { top: 5px; left: 5px; cursor: nw-resize; }
+.resize-handle.top-right { top: 5px; right: 5px; cursor: ne-resize; }
+.resize-handle.bottom-left { bottom: 5px; left: 5px; cursor: sw-resize; }
+.resize-handle.bottom-right { bottom: 5px; right: 5px; cursor: se-resize; }
+
+.close-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    font-size: 14px;
+    background-color: #444;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    z-index: 1000;
+}
+
+.draggable:hover .close-button, 
+.chart-container:hover .close-button,
+.draggable:hover .resize-handle,
+.chart-container:hover .resize-handle {
+    display: block;
+}
+
+.stock-info {
+    padding: 15px;
+    color: white;
+}
+
+.stock-ticker {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.stock-price {
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.stock-change {
+    font-size: 16px;
+}
+
+.positive-change {
+    color: #4caf50;
+}
+
+.negative-change {
+    color: #f44336;
+}
