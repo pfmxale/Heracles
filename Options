@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option Prämienrechner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input {
+            padding: 5px;
+            width: 90%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Option Prämienrechner</h1>
+    <p>Gebe die Parameter der Option ein, um die Prämie zu berechnen:</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Spotpreis (S)</th>
+                <th>Strike (K)</th>
+                <th>Zinssatz (r)</th>
+                <th>Volatilität (σ)</th>
+                <th>Laufzeit (T in Tagen)</th>
+                <th>Prämie (C)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="number" id="spot" value="1.10" step="0.01"></td>
+                <td><input type="number" id="strike" value="1.12" step="0.01"></td>
+                <td><input type="number" id="rate" value="0.05" step="0.01"></td>
+                <td><input type="number" id="volatility" value="0.12" step="0.01"></td>
+                <td><input type="number" id="days" value="25" step="1"></td>
+                <td id="premium">-</td>
+            </tr>
+        </tbody>
+    </table>
+    <button onclick="calculatePremium()">Prämie berechnen</button>
+
+    <script>
+        function calculatePremium() {
+            // Eingabewerte abrufen
+            const S = parseFloat(document.getElementById('spot').value); // Spotpreis
+            const K = parseFloat(document.getElementById('strike').value); // Strike-Preis
+            const r = parseFloat(document.getElementById('rate').value); // Zinssatz
+            const sigma = parseFloat(document.getElementById('volatility').value); // Volatilität
+            const T = parseFloat(document.getElementById('days').value) / 365; // Laufzeit in Jahren
+
+            // Black-Scholes-Formeln für d1 und d2
+            const d1 = (Math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * Math.sqrt(T));
+            const d2 = d1 - sigma * Math.sqrt(T);
+
+            // Normale Verteilungsfunktion (CDF)
+            function normalCDF(x) {
+                return (1.0 + Math.erf(x / Math.sqrt(2.0))) / 2.0;
+            }
+
+            // Prämie berechnen
+            const N_d1 = normalCDF(d1);
+            const N_d2 = normalCDF(d2);
+            const premium = (S * N_d1 - K * Math.exp(-r * T) * N_d2).toFixed(4);
+
+            // Ergebnis anzeigen
+            document.getElementById('premium').textContent = `${premium} USD`;
+        }
+    </script>
+</body>
+</html>
