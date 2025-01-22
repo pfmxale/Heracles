@@ -1,98 +1,210 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Option Prämienrechner</title>
+    <title>FX Options Rechner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.4.4/math.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
+            background-color: #f5f5f5;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        th, td {
-            padding: 10px;
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: inline-block;
+            width: 200px;
+            font-weight: bold;
+        }
+        input {
+            padding: 5px;
             border: 1px solid #ddd;
-            text-align: center;
-        }
-        th {
-            background-color: #f4f4f4;
+            border-radius: 4px;
+            width: 150px;
         }
         button {
-            padding: 10px 15px;
-            background-color: #007BFF;
+            background-color: #007bff;
             color: white;
+            padding: 10px 20px;
             border: none;
+            border-radius: 4px;
             cursor: pointer;
-            border-radius: 5px;
         }
         button:hover {
             background-color: #0056b3;
         }
-        input {
-            padding: 5px;
-            width: 90%;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .result-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
-    <h1>Option Prämienrechner</h1>
-    <p>Gebe die Parameter der Option ein, um die Prämie zu berechnen:</p>
-    <table>
-        <thead>
-            <tr>
-                <th>Spotpreis (S)</th>
-                <th>Strike (K)</th>
-                <th>Zinssatz (r)</th>
-                <th>Volatilität (σ)</th>
-                <th>Laufzeit (T in Tagen)</th>
-                <th>Prämie (C)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><input type="number" id="spot" value="1.10" step="0.01"></td>
-                <td><input type="number" id="strike" value="1.12" step="0.01"></td>
-                <td><input type="number" id="rate" value="0.05" step="0.01"></td>
-                <td><input type="number" id="volatility" value="0.12" step="0.01"></td>
-                <td><input type="number" id="days" value="25" step="1"></td>
-                <td id="premium">-</td>
-            </tr>
-        </tbody>
-    </table>
-    <button onclick="calculatePremium()">Prämie berechnen</button>
+    <div class="container">
+        <h1>FX Options Rechner (EUR/USD)</h1>
+        
+        <div class="input-group">
+            <label>Spot-Kurs (EUR/USD):</label>
+            <input type="number" id="spotPrice" step="0.0001" value="1.0850">
+        </div>
+        
+        <div class="input-group">
+            <label>Strike-Preis:</label>
+            <input type="number" id="strikePrice" step="0.0001" value="1.0900">
+        </div>
+        
+        <div class="input-group">
+            <label>Laufzeit (Tage):</label>
+            <input type="number" id="daysToExpiry" value="25">
+        </div>
+        
+        <div class="input-group">
+            <label>EUR Zinssatz (%):</label>
+            <input type="number" id="eurRate" step="0.01" value="3.50">
+        </div>
+        
+        <div class="input-group">
+            <label>USD Zinssatz (%):</label>
+            <input type="number" id="usdRate" step="0.01" value="5.25">
+        </div>
+        
+        <div class="input-group">
+            <label>Volatilität (%):</label>
+            <input type="number" id="volatility" step="0.1" value="8.0">
+        </div>
+
+        <button onclick="calculateOption()">Berechnen</button>
+
+        <div class="result-section">
+            <h2>Ergebnisse</h2>
+            <div id="results"></div>
+        </div>
+
+        <div id="tableContainer"></div>
+    </div>
 
     <script>
-        function calculatePremium() {
-            // Eingabewerte abrufen
-            const S = parseFloat(document.getElementById('spot').value); // Spotpreis
-            const K = parseFloat(document.getElementById('strike').value); // Strike-Preis
-            const r = parseFloat(document.getElementById('rate').value); // Zinssatz
-            const sigma = parseFloat(document.getElementById('volatility').value); // Volatilität
-            const T = parseFloat(document.getElementById('days').value) / 365; // Laufzeit in Jahren
-
-            // Black-Scholes-Formeln für d1 und d2
-            const d1 = (Math.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * Math.sqrt(T));
+        function calculateGarmanKohlhagen(S, K, T, r_d, r_f, sigma) {
+            const d1 = (Math.log(S/K) + (r_d - r_f + Math.pow(sigma, 2)/2) * T) / (sigma * Math.sqrt(T));
             const d2 = d1 - sigma * Math.sqrt(T);
-
-            // Normale Verteilungsfunktion (CDF)
+            
             function normalCDF(x) {
-                return (1.0 + Math.erf(x / Math.sqrt(2.0))) / 2.0;
+                const a1 = 0.254829592;
+                const a2 = -0.284496736;
+                const a3 = 1.421413741;
+                const a4 = -1.453152027;
+                const a5 = 1.061405429;
+                const p = 0.3275911;
+                const sign = (x < 0) ? -1 : 1;
+                x = Math.abs(x)/Math.sqrt(2.0);
+                const t = 1.0/(1.0 + p*x);
+                const erf = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.exp(-x*x);
+                return 0.5*(1.0 + sign*erf);
             }
 
-            // Prämie berechnen
-            const N_d1 = normalCDF(d1);
-            const N_d2 = normalCDF(d2);
-            const premium = (S * N_d1 - K * Math.exp(-r * T) * N_d2).toFixed(4);
-
-            // Ergebnis anzeigen
-            document.getElementById('premium').textContent = `${premium} USD`;
+            const callPrice = S * Math.exp(-r_f * T) * normalCDF(d1) - K * Math.exp(-r_d * T) * normalCDF(d2);
+            const delta = Math.exp(-r_f * T) * normalCDF(d1);
+            const gamma = Math.exp(-r_f * T) * Math.exp(-Math.pow(d1, 2)/2) / (S * sigma * Math.sqrt(T) * Math.sqrt(2 * Math.PI));
+            const theta = -(S * sigma * Math.exp(-r_f * T) * Math.exp(-Math.pow(d1, 2)/2)) / (2 * Math.sqrt(T) * Math.sqrt(2 * Math.PI)) 
+                         - r_d * K * Math.exp(-r_d * T) * normalCDF(d2) 
+                         + r_f * S * Math.exp(-r_f * T) * normalCDF(d1);
+            const vega = S * Math.exp(-r_f * T) * Math.sqrt(T) * Math.exp(-Math.pow(d1, 2)/2) / Math.sqrt(2 * Math.PI);
+            
+            return {
+                prämie: callPrice,
+                delta: delta,
+                gamma: gamma,
+                theta: theta / 365, // Tägliche Theta
+                vega: vega / 100 // Vega pro 1% Volatilitätsänderung
+            };
         }
+
+        function calculateOption() {
+            const S = parseFloat(document.getElementById('spotPrice').value);
+            const K = parseFloat(document.getElementById('strikePrice').value);
+            const days = parseFloat(document.getElementById('daysToExpiry').value);
+            const T = days / 365;
+            const r_d = parseFloat(document.getElementById('usdRate').value) / 100;
+            const r_f = parseFloat(document.getElementById('eurRate').value) / 100;
+            const sigma = parseFloat(document.getElementById('volatility').value) / 100;
+
+            const results = calculateGarmanKohlhagen(S, K, T, r_d, r_f, sigma);
+
+            // Ergebnisse anzeigen
+            let htmlResult = `
+                <p><strong>Call Option Prämie:</strong> ${results.prämie.toFixed(4)} USD</p>
+                <p><strong>Delta:</strong> ${results.delta.toFixed(4)}</p>
+                <p><strong>Gamma:</strong> ${results.gamma.toFixed(4)}</p>
+                <p><strong>Theta (täglich):</strong> ${results.theta.toFixed(4)}</p>
+                <p><strong>Vega (pro 1% Vol):</strong> ${results.vega.toFixed(4)}</p>
+            `;
+            document.getElementById('results').innerHTML = htmlResult;
+
+            // Sensitivitätsanalyse Tabelle erstellen
+            generateSensitivityTable(S, K, T, r_d, r_f, sigma);
+        }
+
+        function generateSensitivityTable(S, K, T, r_d, r_f, sigma) {
+            const spotSteps = 5;
+            const volSteps = 3;
+            const spotRange = 0.02; // ±2%
+            const volRange = 0.02; // ±2%
+
+            let html = '<h2>Sensitivitätsanalyse</h2>';
+            html += '<table>';
+            html += '<tr><th>Spot Preis</th><th>Volatilität</th><th>Prämie</th><th>Delta</th></tr>';
+
+            for (let i = -spotSteps; i <= spotSteps; i++) {
+                const spotAdjust = 1 + (i * spotRange/spotSteps);
+                const newSpot = S * spotAdjust;
+
+                for (let j = -volSteps; j <= volSteps; j++) {
+                    const volAdjust = sigma * (1 + (j * volRange/volSteps));
+                    const results = calculateGarmanKohlhagen(newSpot, K, T, r_d, r_f, volAdjust);
+
+                    html += `
+                        <tr>
+                            <td>${newSpot.toFixed(4)}</td>
+                            <td>${(volAdjust * 100).toFixed(1)}%</td>
+                            <td>${results.prämie.toFixed(4)}</td>
+                            <td>${results.delta.toFixed(4)}</td>
+                        </tr>
+                    `;
+                }
+            }
+
+            html += '</table>';
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+
+        // Initial calculation
+        calculateOption();
     </script>
 </body>
 </html>
