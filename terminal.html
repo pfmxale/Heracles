@@ -39,7 +39,6 @@
             border: 1px solid #444;
             background-color: #2a2e39;
             border-radius: 5px;
-            resize: both;
             overflow: auto;
             cursor: move;
             min-width: 200px;
@@ -101,6 +100,16 @@
         .negative-change {
             color: #f44336;
         }
+
+        .resize-handle {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 10px;
+            height: 10px;
+            background-color: #444;
+            cursor: se-resize;
+        }
     </style>
 </head>
 <body>
@@ -122,6 +131,7 @@
             container.innerHTML = `
                 <div class="close-button">X</div>
                 <div id="chart_${ticker}" style="width: 100%; height: 100%;"></div>
+                <div class="resize-handle"></div>
             `;
             document.body.appendChild(container);
 
@@ -142,6 +152,7 @@
             });
 
             addDragAndCloseFunctionality(container);
+            addResizeFunctionality(container);
         }
 
         // Funktion zum Erstellen einer Info-Box
@@ -155,12 +166,14 @@
                     <div class="stock-price">Laden...</div>
                     <div class="stock-change">Laden...</div>
                 </div>
+                <div class="resize-handle"></div>
             `;
             document.body.appendChild(container);
             addDragAndCloseFunctionality(container);
+            addResizeFunctionality(container);
 
             try {
-                // Fetch Aktiendaten von der Finnhub API (Sie müssen Ihren API-Key einfügen)
+                // Fetch Aktiendaten von der Finnhub API
                 const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=cub11jhr01qof06jkavgcub11jhr01qof06jkb00`);
                 const data = await response.json();
 
@@ -190,6 +203,7 @@
             let initialX, initialY, currentX, currentY;
 
             element.addEventListener('mousedown', (e) => {
+                if (e.target === closeButton || e.target.classList.contains('resize-handle')) return; // Verhindert Drag beim Klicken auf den Close-Button oder Resize-Handle
                 isDragging = true;
                 initialX = e.clientX - element.offsetLeft;
                 initialY = e.clientY - element.offsetTop;
@@ -206,6 +220,36 @@
 
             document.addEventListener('mouseup', () => {
                 isDragging = false;
+            });
+        }
+
+        // Funktion für proportionale Größenänderung
+        function addResizeFunctionality(element) {
+            const resizeHandle = element.querySelector('.resize-handle');
+            let isResizing = false;
+            let initialWidth, initialHeight, initialX, initialY, aspectRatio;
+
+            resizeHandle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                initialWidth = element.offsetWidth;
+                initialHeight = element.offsetHeight;
+                aspectRatio = initialWidth / initialHeight;
+                initialX = e.clientX;
+                initialY = e.clientY;
+                e.preventDefault(); // Verhindert Textauswahl
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isResizing) {
+                    const width = initialWidth + (e.clientX - initialX);
+                    const height = width / aspectRatio; // Behält das Seitenverhältnis bei
+                    element.style.width = `${width}px`;
+                    element.style.height = `${height}px`;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
             });
         }
 
