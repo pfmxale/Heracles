@@ -161,7 +161,7 @@
 
             try {
                 // Fetch Aktiendaten von der Finnhub API (Sie müssen Ihren API-Key einfügen)
-                const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=IHR_API_KEY`);
+                const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=cub11jhr01qof06jkavgcub11jhr01qof06jkb00`);
                 const data = await response.json();
 
                 if (data.c) {
@@ -216,15 +216,21 @@
                 const selection = document.getElementById('selection').value;
 
                 if (!ticker) {
-                    alert('Bitte einen gültigen Ticker eingeben.');
+                    document.getElementById('errorMessage').textContent = 'Bitte einen gültigen Ticker eingeben.';
+                    document.getElementById('errorMessage').style.display = 'block';
                     return;
                 }
+
+                document.getElementById('loadingMessage').style.display = 'block';
+                document.getElementById('errorMessage').style.display = 'none';
 
                 if (selection === 'chart') {
                     createChart(ticker);
                 } else if (selection === 'box') {
                     createBox(ticker);
                 }
+
+                document.getElementById('loadingMessage').style.display = 'none';
             }
         });
     </script>
