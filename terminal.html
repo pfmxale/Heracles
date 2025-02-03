@@ -1,282 +1,401 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Terminal</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #1e222d;
-            color: white;
-        }
-
-        #tickerInput {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin: 10px;
-            background-color: #2a2e39;
-            border: 1px solid #444;
-            color: white;
-            border-radius: 4px;
-        }
-
-        .dropdown {
-            background-color: #2a2e39;
-            border: 1px solid #444;
-            color: white;
-            padding: 10px;
-            border-radius: 4px;
-            margin: 10px;
-        }
-
-        .draggable, .chart-container {
-            position: absolute;
-            top: 100px;
-            left: 100px;
-            padding: 10px;
-            border: 1px solid #444;
-            background-color: #2a2e39;
-            border-radius: 5px;
-            overflow: auto;
-            cursor: move;
-            min-width: 200px;
-            min-height: 100px;
-        }
-
-        .close-button {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 20px;
-            height: 20px;
-            text-align: center;
-            line-height: 20px;
-            font-size: 14px;
-            background-color: #444;
-            color: white;
-            border-radius: 50%;
-            cursor: pointer;
-            display: none;
-        }
-
-        .draggable:hover .close-button, .chart-container:hover .close-button {
-            display: block;
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-            margin-bottom: 10px;
-        }
-
-        .stock-info {
-            padding: 15px;
-            color: white;
-        }
-
-        .stock-ticker {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .stock-price {
-            font-size: 20px;
-            margin-bottom: 5px;
-        }
-
-        .stock-change {
-            font-size: 16px;
-        }
-
-        .positive-change {
-            color: #4caf50;
-        }
-
-        .negative-change {
-            color: #f44336;
-        }
-
-        .resize-handle {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            width: 10px;
-            height: 10px;
-            background-color: #444;
-            cursor: se-resize;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Godel Terminal Clone – Orange Style mit proportionalem Scaling</title>
+  <style>
+    /* Global – Orange Schrift auf schwarzem Background */
+    body {
+      margin: 0;
+      font-family: "Courier New", Courier, monospace;
+      background-color: #000; /* Schwarz */
+      color: #FFA500;       /* Orange */
+    }
+    
+    /* Top Navigation Bar */
+    #topBar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50px;
+      background-color: #000;
+      border-bottom: 1px solid #FFA500;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      z-index: 1000;
+    }
+    
+    #topBar button {
+      background: none;
+      border: none;
+      color: #FFA500;
+      margin-right: 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    #topBar button:hover {
+      color: #FFB347;
+    }
+    
+    /* Eingabefeld für Ticker/Command */
+    #tickerInput {
+      position: fixed;
+      top: 60px; /* direkt unter der Top-Bar */
+      left: 10px;
+      width: calc(100% - 20px);
+      padding: 10px;
+      font-size: 16px;
+      font-family: "Courier New", Courier, monospace;
+      background-color: #000;
+      border: 1px solid #FFA500;
+      border-radius: 4px;
+      color: #FFA500;
+      z-index: 1000;
+    }
+    
+    /* Panel-Styles */
+    .panel {
+      position: absolute;
+      top: 120px;
+      left: 120px;
+      background-color: #000;
+      border: 1px solid #FFA500;
+      border-radius: 5px;
+      overflow: hidden;
+      cursor: move;
+      /* Anfangsgröße */
+      width: 300px;
+      height: 200px;
+      box-shadow: 0 0 10px #FFA500;
+    }
+    
+    /* Innerer Wrapper – hier werden alle Inhalte (Header und Body) eingefügt und skaliert */
+    .panel-inner {
+      width: 300px;   /* Basisbreite – entspricht der Startgröße */
+      height: 200px;  /* Basis-Höhe */
+      transform-origin: top left;
+    }
+    
+    .panel-header {
+      height: 30px;
+      background-color: #000;
+      color: #FFA500;
+      padding: 5px 10px;
+      cursor: move;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #FFA500;
+    }
+    
+    .close-button {
+      background: none;
+      border: none;
+      color: #FFA500;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .close-button:hover {
+      color: #FF4500;
+    }
+    
+    .panel-body {
+      padding: 10px;
+      /* Damit der Inhalt innerhalb des Wrappers (und damit der Skalierung) bleibt */
+      width: 100%;
+      height: calc(100% - 30px);
+      box-sizing: border-box;
+    }
+    
+    /* Resize Handle */
+    .resize-handle {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 15px;
+      height: 15px;
+      background-color: #FFA500;
+      cursor: se-resize;
+      z-index: 1001;
+    }
+  </style>
 </head>
 <body>
-    <input type="text" id="tickerInput" placeholder="Ticker eingeben (z.B. AAPL) und Enter drücken">
-    <select id="selection" class="dropdown">
-        <option value="box">Box anzeigen</option>
-        <option value="chart">Chart anzeigen</option>
-    </select>
-    <div id="loadingMessage" style="color: white; display: none;">Laden...</div>
-    <div id="errorMessage" style="color: red; display: none;"></div>
-
-    <script src="https://s3.tradingview.com/tv.js"></script>
-
-    <script>
-        // Funktion zum Erstellen eines TradingView-Charts
-        function createChart(ticker) {
-            const container = document.createElement('div');
-            container.className = 'chart-container';
-            container.innerHTML = `
-                <div class="close-button">X</div>
-                <div id="chart_${ticker}" style="width: 100%; height: 100%;"></div>
-                <div class="resize-handle"></div>
-            `;
-            document.body.appendChild(container);
-
-            // TradingView Chart-Widget
-            new TradingView.widget({
-                container_id: `chart_${ticker}`,
-                symbol: ticker,
-                interval: '1',
-                theme: 'dark',
-                style: '1',
-                locale: 'de',
-                toolbar_bg: '#1e222d',
-                enable_publishing: false,
-                withdateranges: true,
-                hide_side_toolbar: false,
-                allow_symbol_change: true,
-                studies: [],
-            });
-
-            addDragAndCloseFunctionality(container);
-            addResizeFunctionality(container);
+  <!-- Top Navigation Bar -->
+  <div id="topBar">
+    <button onclick="createPanel('QM')">QM</button>
+    <button onclick="createPanel('N')">N</button>
+    <button onclick="createPanel('G')">G</button>
+    <button onclick="createPanel('CF')">CF</button>
+    <button onclick="createPanel('TAS')">TAS</button>
+    <button onclick="createChartFromInput()">Chart</button>
+    <button onclick="createBoxFromInput()">Box</button>
+    <button onclick="createPanel('News')">News</button>
+    <button onclick="createPanel('Chat')">Chat</button>
+  </div>
+  
+  <!-- Ticker-/Command-Eingabefeld -->
+  <input type="text" id="tickerInput" placeholder="Ticker eingeben (z.B. AAPL) und Enter drücken" />
+  
+  <!-- TradingView-Script -->
+  <script src="https://s3.tradingview.com/tv.js"></script>
+  
+  <script>
+    // Funktion zum Hinzufügen von Drag & Resize inklusive Skalierung des inneren Wrappers
+    function addDragAndResize(panel) {
+      let isDragging = false;
+      let offsetX, offsetY;
+      const inner = panel.querySelector('.panel-inner');
+      
+      // Dragging: Wird über den inneren Wrapper (Header und Body) gesteuert
+      inner.addEventListener('mousedown', function(e) {
+        // Prüfe, ob nicht auf den Resize-Handle geklickt wurde
+        if (e.target.classList.contains('resize-handle')) return;
+        isDragging = true;
+        offsetX = e.clientX - panel.offsetLeft;
+        offsetY = e.clientY - panel.offsetTop;
+        panel.style.zIndex = parseInt(Date.now());
+      });
+      
+      document.addEventListener('mousemove', function(e) {
+        if (isDragging) {
+          panel.style.left = (e.clientX - offsetX) + 'px';
+          panel.style.top = (e.clientY - offsetY) + 'px';
         }
-
-        // Funktion zum Erstellen einer Info-Box
-        async function createBox(ticker) {
-            const container = document.createElement('div');
-            container.className = 'draggable';
-            container.innerHTML = `
-                <div class="close-button">X</div>
-                <div class="stock-info">
-                    <div class="stock-ticker">${ticker}</div>
-                    <div class="stock-price">Laden...</div>
-                    <div class="stock-change">Laden...</div>
-                </div>
-                <div class="resize-handle"></div>
-            `;
-            document.body.appendChild(container);
-            addDragAndCloseFunctionality(container);
-            addResizeFunctionality(container);
-
-            try {
-                // Fetch Aktiendaten von der Finnhub API
-                const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=cub11jhr01qof06jkavgcub11jhr01qof06jkb00`);
-                const data = await response.json();
-
-                if (data.c) {
-                    const priceElement = container.querySelector('.stock-price');
-                    const changeElement = container.querySelector('.stock-change');
-                    
-                    priceElement.textContent = `$${data.c.toFixed(2)}`;
-                    
-                    const changePercent = ((data.c - data.pc) / data.pc * 100).toFixed(2);
-                    const changeClass = changePercent >= 0 ? 'positive-change' : 'negative-change';
-                    changeElement.textContent = `${changePercent}%`;
-                    changeElement.className = `stock-change ${changeClass}`;
-                }
-            } catch (error) {
-                container.querySelector('.stock-price').textContent = 'Fehler beim Laden';
-                container.querySelector('.stock-change').textContent = 'Nicht verfügbar';
-            }
+      });
+      
+      document.addEventListener('mouseup', function() {
+        isDragging = false;
+      });
+      
+      // Resizing
+      const resizeHandle = panel.querySelector('.resize-handle');
+      let isResizing = false;
+      let startWidth, startHeight, startX, startY;
+      const baseWidth = parseFloat(panel.dataset.baseWidth);
+      const baseHeight = parseFloat(panel.dataset.baseHeight);
+      
+      resizeHandle.addEventListener('mousedown', function(e) {
+        isResizing = true;
+        startWidth = panel.offsetWidth;
+        startHeight = panel.offsetHeight;
+        startX = e.clientX;
+        startY = e.clientY;
+        e.stopPropagation();
+        e.preventDefault();
+      });
+      
+      document.addEventListener('mousemove', function(e) {
+        if (isResizing) {
+          const newWidth = startWidth + (e.clientX - startX);
+          const newHeight = startHeight + (e.clientY - startY);
+          panel.style.width = newWidth + 'px';
+          panel.style.height = newHeight + 'px';
+          // Berechne den Skalierungsfaktor: Verwende den kleineren Faktor, um Proportionalität zu gewährleisten
+          const scale = Math.min(newWidth / baseWidth, newHeight / baseHeight);
+          inner.style.transform = `scale(${scale})`;
         }
-
-        // Funktion für Dragging und Schließen
-        function addDragAndCloseFunctionality(element) {
-            const closeButton = element.querySelector('.close-button');
-            closeButton.addEventListener('click', () => element.remove());
-
-            let isDragging = false;
-            let initialX, initialY, currentX, currentY;
-
-            element.addEventListener('mousedown', (e) => {
-                if (e.target === closeButton || e.target.classList.contains('resize-handle')) return; // Verhindert Drag beim Klicken auf den Close-Button oder Resize-Handle
-                isDragging = true;
-                initialX = e.clientX - element.offsetLeft;
-                initialY = e.clientY - element.offsetTop;
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (isDragging) {
-                    currentX = e.clientX - initialX;
-                    currentY = e.clientY - initialY;
-                    element.style.left = `${currentX}px`;
-                    element.style.top = `${currentY}px`;
-                }
-            });
-
-            document.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
+      });
+      
+      document.addEventListener('mouseup', function() {
+        isResizing = false;
+      });
+    }
+    
+    // Generische Funktion zum Erzeugen eines Panels
+    function createPanel(title, content = '') {
+      const panel = document.createElement('div');
+      panel.className = 'panel';
+      // Setze initiale Größe (Basiswerte) – hier 300px Breite und 200px Höhe
+      panel.style.width = '300px';
+      panel.style.height = '200px';
+      // Speichere Basisbreite und -höhe im Dataset
+      panel.dataset.baseWidth = "300";
+      panel.dataset.baseHeight = "200";
+      
+      // Erstelle den inneren Wrapper
+      const inner = document.createElement('div');
+      inner.className = 'panel-inner';
+      // Setze Basiswerte
+      inner.style.width = '300px';
+      inner.style.height = '200px';
+      inner.style.transformOrigin = 'top left';
+      
+      // Erstelle Header
+      const header = document.createElement('div');
+      header.className = 'panel-header';
+      header.innerHTML = `<span>${title}</span>`;
+      
+      const closeButton = document.createElement('button');
+      closeButton.className = 'close-button';
+      closeButton.textContent = 'X';
+      closeButton.onclick = () => panel.remove();
+      header.appendChild(closeButton);
+      
+      // Erstelle Body (Content)
+      const body = document.createElement('div');
+      body.className = 'panel-body';
+      body.innerHTML = content || `<p>${title} Panel – Funktion nicht implementiert.</p>`;
+      
+      // Füge Header und Body dem inneren Wrapper hinzu
+      inner.appendChild(header);
+      inner.appendChild(body);
+      
+      // Füge den inneren Wrapper und den Resize-Handle dem Panel hinzu
+      panel.appendChild(inner);
+      
+      const resizeHandle = document.createElement('div');
+      resizeHandle.className = 'resize-handle';
+      panel.appendChild(resizeHandle);
+      
+      document.body.appendChild(panel);
+      
+      addDragAndResize(panel);
+    }
+    
+    // Erzeugt ein Panel mit TradingView-Chart
+    function createChart(ticker) {
+      const content = ''; // Inhalt wird über TradingView ersetzt
+      const panel = document.createElement('div');
+      panel.className = 'panel';
+      panel.style.width = '600px';
+      panel.style.height = '400px';
+      panel.dataset.baseWidth = "600";
+      panel.dataset.baseHeight = "400";
+      
+      const inner = document.createElement('div');
+      inner.className = 'panel-inner';
+      inner.style.width = '600px';
+      inner.style.height = '400px';
+      inner.style.transformOrigin = 'top left';
+      
+      const header = document.createElement('div');
+      header.className = 'panel-header';
+      header.innerHTML = `<span>Chart: ${ticker}</span>`;
+      
+      const closeButton = document.createElement('button');
+      closeButton.className = 'close-button';
+      closeButton.textContent = 'X';
+      closeButton.onclick = () => panel.remove();
+      header.appendChild(closeButton);
+      
+      const body = document.createElement('div');
+      body.className = 'panel-body';
+      body.style.padding = '0'; // Keine zusätzliche Padding, damit der Chart den ganzen Platz nutzt
+      body.innerHTML = `<div id="chart_${ticker}_${Date.now()}" style="width:100%; height:100%;"></div>`;
+      
+      inner.appendChild(header);
+      inner.appendChild(body);
+      panel.appendChild(inner);
+      
+      const resizeHandle = document.createElement('div');
+      resizeHandle.className = 'resize-handle';
+      panel.appendChild(resizeHandle);
+      
+      document.body.appendChild(panel);
+      addDragAndResize(panel);
+      
+      new TradingView.widget({
+        container_id: body.firstChild.id,
+        symbol: ticker,
+        interval: '1',
+        theme: 'dark',
+        style: '1',
+        locale: 'de',
+        toolbar_bg: '#000',
+        enable_publishing: false,
+        hide_top_toolbar: true,
+        withdateranges: true,
+        hide_side_toolbar: false,
+        allow_symbol_change: true,
+        studies: []
+      });
+    }
+    
+    // Erzeugt ein Panel mit Aktieninformationen (Box) via Finnhub API
+    async function createBox(ticker) {
+      const panel = document.createElement('div');
+      panel.className = 'panel';
+      panel.style.width = '300px';
+      panel.style.height = '200px';
+      panel.dataset.baseWidth = "300";
+      panel.dataset.baseHeight = "200";
+      
+      const inner = document.createElement('div');
+      inner.className = 'panel-inner';
+      inner.style.width = '300px';
+      inner.style.height = '200px';
+      inner.style.transformOrigin = 'top left';
+      
+      const header = document.createElement('div');
+      header.className = 'panel-header';
+      header.innerHTML = `<span>Box: ${ticker}</span>`;
+      
+      const closeButton = document.createElement('button');
+      closeButton.className = 'close-button';
+      closeButton.textContent = 'X';
+      closeButton.onclick = () => panel.remove();
+      header.appendChild(closeButton);
+      
+      const body = document.createElement('div');
+      body.className = 'panel-body';
+      body.innerHTML = `<p>Laden...</p>`;
+      
+      inner.appendChild(header);
+      inner.appendChild(body);
+      panel.appendChild(inner);
+      
+      const resizeHandle = document.createElement('div');
+      resizeHandle.className = 'resize-handle';
+      panel.appendChild(resizeHandle);
+      
+      document.body.appendChild(panel);
+      addDragAndResize(panel);
+      
+      try {
+        const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=cub11jhr01qof06jkavgcub11jhr01qof06jkb00`);
+        const data = await response.json();
+        if (data.c) {
+          const price = `$${data.c.toFixed(2)}`;
+          const changePercent = (((data.c - data.pc) / data.pc) * 100).toFixed(2) + '%';
+          body.innerHTML = `<p style="font-size:18px;">${ticker}</p>
+                            <p style="font-size:16px;">Preis: ${price}</p>
+                            <p style="font-size:14px;">Veränderung: ${changePercent}</p>`;
+        } else {
+          body.innerHTML = `<p>Keine Daten verfügbar.</p>`;
         }
-
-        // Funktion für proportionale Größenänderung
-        function addResizeFunctionality(element) {
-            const resizeHandle = element.querySelector('.resize-handle');
-            let isResizing = false;
-            let initialWidth, initialHeight, initialX, initialY, aspectRatio;
-
-            resizeHandle.addEventListener('mousedown', (e) => {
-                isResizing = true;
-                initialWidth = element.offsetWidth;
-                initialHeight = element.offsetHeight;
-                aspectRatio = initialWidth / initialHeight;
-                initialX = e.clientX;
-                initialY = e.clientY;
-                e.preventDefault(); // Verhindert Textauswahl
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (isResizing) {
-                    const width = initialWidth + (e.clientX - initialX);
-                    const height = width / aspectRatio; // Behält das Seitenverhältnis bei
-                    element.style.width = `${width}px`;
-                    element.style.height = `${height}px`;
-                }
-            });
-
-            document.addEventListener('mouseup', () => {
-                isResizing = false;
-            });
-        }
-
-        // Eingabe verarbeiten
-        document.getElementById('tickerInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                const ticker = this.value.trim().toUpperCase();
-                const selection = document.getElementById('selection').value;
-
-                if (!ticker) {
-                    document.getElementById('errorMessage').textContent = 'Bitte einen gültigen Ticker eingeben.';
-                    document.getElementById('errorMessage').style.display = 'block';
-                    return;
-                }
-
-                document.getElementById('loadingMessage').style.display = 'block';
-                document.getElementById('errorMessage').style.display = 'none';
-
-                if (selection === 'chart') {
-                    createChart(ticker);
-                } else if (selection === 'box') {
-                    createBox(ticker);
-                }
-
-                document.getElementById('loadingMessage').style.display = 'none';
-            }
-        });
-    </script>
+      } catch (error) {
+        body.innerHTML = `<p>Fehler beim Laden der Daten.</p>`;
+      }
+    }
+    
+    // Hilfsfunktionen: Erzeugt Chart bzw. Box basierend auf dem Ticker im Eingabefeld
+    function createChartFromInput() {
+      const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+      if (ticker) {
+        createChart(ticker);
+      }
+    }
+    
+    function createBoxFromInput() {
+      const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+      if (ticker) {
+        createBox(ticker);
+      }
+    }
+    
+    // Event-Listener: Bei Enter im Ticker-Feld wird standardmäßig eine Box erstellt
+    document.getElementById('tickerInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        createBoxFromInput();
+        document.getElementById('tickerInput').value = '';
+      }
+    });
+  </script>
 </body>
 </html>
