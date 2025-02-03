@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Godel Terminal Clone – Orange Style mit proportionalem Scaling</title>
+  <title>Godel Terminal Clone – Orange Style (Resizing)</title>
   <style>
     /* Global – Orange Schrift auf schwarzem Background */
     body {
@@ -67,16 +67,19 @@
       border-radius: 5px;
       overflow: hidden;
       cursor: move;
-      /* Anfangsgröße */
+      /* Anfangsgröße (Basiswerte) */
       width: 300px;
       height: 200px;
-      box-shadow: 0 0 10px #FFA500;
+      /* Glow (box-shadow) entfernt */
     }
     
-    /* Innerer Wrapper – hier werden alle Inhalte (Header und Body) eingefügt und skaliert */
+    /* Innerer Wrapper – für scaling und absolute Positionierung */
     .panel-inner {
-      width: 300px;   /* Basisbreite – entspricht der Startgröße */
-      height: 200px;  /* Basis-Höhe */
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 300px;   /* Basisbreite */
+      height: 200px;  /* Basishöhe */
       transform-origin: top left;
     }
     
@@ -106,7 +109,6 @@
     
     .panel-body {
       padding: 10px;
-      /* Damit der Inhalt innerhalb des Wrappers (und damit der Skalierung) bleibt */
       width: 100%;
       height: calc(100% - 30px);
       box-sizing: border-box;
@@ -146,15 +148,14 @@
   <script src="https://s3.tradingview.com/tv.js"></script>
   
   <script>
-    // Funktion zum Hinzufügen von Drag & Resize inklusive Skalierung des inneren Wrappers
+    // Funktion zum Hinzufügen von Drag & Resize inklusive proportionalem Scaling
     function addDragAndResize(panel) {
       let isDragging = false;
       let offsetX, offsetY;
       const inner = panel.querySelector('.panel-inner');
       
-      // Dragging: Wird über den inneren Wrapper (Header und Body) gesteuert
+      // Dragging: über den inneren Wrapper (außer Resize-Handle)
       inner.addEventListener('mousedown', function(e) {
-        // Prüfe, ob nicht auf den Resize-Handle geklickt wurde
         if (e.target.classList.contains('resize-handle')) return;
         isDragging = true;
         offsetX = e.clientX - panel.offsetLeft;
@@ -173,10 +174,11 @@
         isDragging = false;
       });
       
-      // Resizing
+      // Resizing: Anpassung der Panelgröße und Skalierung des inneren Wrappers
       const resizeHandle = panel.querySelector('.resize-handle');
       let isResizing = false;
       let startWidth, startHeight, startX, startY;
+      // Basiswerte aus dem dataset (als Zahl)
       const baseWidth = parseFloat(panel.dataset.baseWidth);
       const baseHeight = parseFloat(panel.dataset.baseHeight);
       
@@ -196,8 +198,11 @@
           const newHeight = startHeight + (e.clientY - startY);
           panel.style.width = newWidth + 'px';
           panel.style.height = newHeight + 'px';
-          // Berechne den Skalierungsfaktor: Verwende den kleineren Faktor, um Proportionalität zu gewährleisten
-          const scale = Math.min(newWidth / baseWidth, newHeight / baseHeight);
+          // Berechne Skalierungsfaktor (beide Dimensionen)
+          const scaleX = newWidth / baseWidth;
+          const scaleY = newHeight / baseHeight;
+          // Verwende den kleineren Faktor, um Proportionalität zu gewährleisten
+          const scale = Math.min(scaleX, scaleY);
           inner.style.transform = `scale(${scale})`;
         }
       });
@@ -211,22 +216,20 @@
     function createPanel(title, content = '') {
       const panel = document.createElement('div');
       panel.className = 'panel';
-      // Setze initiale Größe (Basiswerte) – hier 300px Breite und 200px Höhe
+      // Basisgröße festlegen
       panel.style.width = '300px';
       panel.style.height = '200px';
-      // Speichere Basisbreite und -höhe im Dataset
       panel.dataset.baseWidth = "300";
       panel.dataset.baseHeight = "200";
       
       // Erstelle den inneren Wrapper
       const inner = document.createElement('div');
       inner.className = 'panel-inner';
-      // Setze Basiswerte
       inner.style.width = '300px';
       inner.style.height = '200px';
       inner.style.transformOrigin = 'top left';
       
-      // Erstelle Header
+      // Header
       const header = document.createElement('div');
       header.className = 'panel-header';
       header.innerHTML = `<span>${title}</span>`;
@@ -237,30 +240,26 @@
       closeButton.onclick = () => panel.remove();
       header.appendChild(closeButton);
       
-      // Erstelle Body (Content)
+      // Body (Content)
       const body = document.createElement('div');
       body.className = 'panel-body';
       body.innerHTML = content || `<p>${title} Panel – Funktion nicht implementiert.</p>`;
       
-      // Füge Header und Body dem inneren Wrapper hinzu
       inner.appendChild(header);
       inner.appendChild(body);
-      
-      // Füge den inneren Wrapper und den Resize-Handle dem Panel hinzu
       panel.appendChild(inner);
       
+      // Resize Handle
       const resizeHandle = document.createElement('div');
       resizeHandle.className = 'resize-handle';
       panel.appendChild(resizeHandle);
       
       document.body.appendChild(panel);
-      
       addDragAndResize(panel);
     }
     
     // Erzeugt ein Panel mit TradingView-Chart
     function createChart(ticker) {
-      const content = ''; // Inhalt wird über TradingView ersetzt
       const panel = document.createElement('div');
       panel.className = 'panel';
       panel.style.width = '600px';
@@ -286,8 +285,14 @@
       
       const body = document.createElement('div');
       body.className = 'panel-body';
-      body.style.padding = '0'; // Keine zusätzliche Padding, damit der Chart den ganzen Platz nutzt
-      body.innerHTML = `<div id="chart_${ticker}_${Date.now()}" style="width:100%; height:100%;"></div>`;
+      body.style.padding = '0';
+      // Erzeuge einen Div, der den Chart enthält und 100% der Breite/Höhe einnimmt
+      const chartDiv = document.createElement('div');
+      const chartId = 'chart_' + ticker + '_' + Date.now();
+      chartDiv.id = chartId;
+      chartDiv.style.width = '100%';
+      chartDiv.style.height = '100%';
+      body.appendChild(chartDiv);
       
       inner.appendChild(header);
       inner.appendChild(body);
@@ -301,7 +306,7 @@
       addDragAndResize(panel);
       
       new TradingView.widget({
-        container_id: body.firstChild.id,
+        container_id: chartId,
         symbol: ticker,
         interval: '1',
         theme: 'dark',
@@ -362,10 +367,13 @@
         const data = await response.json();
         if (data.c) {
           const price = `$${data.c.toFixed(2)}`;
-          const changePercent = (((data.c - data.pc) / data.pc) * 100).toFixed(2) + '%';
+          const diff = data.c - data.pc;
+          const changePercent = ((diff / data.pc) * 100).toFixed(2) + '%';
+          // Bestimme die Farbe: grün bei positiv, rot bei negativ
+          const changeColor = diff >= 0 ? 'green' : 'red';
           body.innerHTML = `<p style="font-size:18px;">${ticker}</p>
                             <p style="font-size:16px;">Preis: ${price}</p>
-                            <p style="font-size:14px;">Veränderung: ${changePercent}</p>`;
+                            <p style="font-size:14px; color:${changeColor};">Veränderung: ${changePercent}</p>`;
         } else {
           body.innerHTML = `<p>Keine Daten verfügbar.</p>`;
         }
