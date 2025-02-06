@@ -1,15 +1,9 @@
-// news.js
+// news.js (Beispiel)
 
-// Hier dein API-Key rein (Achtung: für Demo reicht's,
-// in Produktion sollte man den Key nicht offen legen)
-const NEWS_API_KEY = 'DEIN_KEY_HIER';
-
-// createNews() wird aufgerufen, wenn du auf den "News" Button klickst.
-async function createNews() {
-  // 1) Panel erstellen
+async function createNewsFromTwitterAccounts() {
+  // Erzeuge Panel wie gehabt
   const panel = document.createElement('div');
   panel.className = 'panel';
-  // etwas größere Standardmaße
   panel.style.width = '600px';
   panel.style.height = '400px';
   panel.dataset.baseWidth = "600";
@@ -20,72 +14,102 @@ async function createNews() {
   inner.style.width = '600px';
   inner.style.height = '400px';
 
-  // 2) Header
+  // Header
   const header = document.createElement('div');
   header.className = 'panel-header';
-  header.innerHTML = `<span>News (NewsAPI)</span>`;
-
+  header.innerHTML = `<span>X-Accounts News</span>`;
   const closeButton = document.createElement('button');
   closeButton.className = 'close-button';
   closeButton.textContent = 'X';
   closeButton.onclick = () => panel.remove();
   header.appendChild(closeButton);
 
-  // 3) Body (dort schreiben wir später unsere Headlines rein)
+  // Body
   const body = document.createElement('div');
   body.className = 'panel-body';
-  body.innerHTML = `<p>Lade News...</p>`;
+  body.innerHTML = `<p>Lade Tweets...</p>`;
 
   inner.appendChild(header);
   inner.appendChild(body);
   panel.appendChild(inner);
 
-  // 4) Resize-Handle
+  // Resize-Handle
   const resizeHandle = document.createElement('div');
   resizeHandle.className = 'resize-handle';
   panel.appendChild(resizeHandle);
 
-  // 5) Panel ins DOM einfügen
+  // ins DOM
   document.body.appendChild(panel);
-
-  // 6) Drag & Resize aktivieren (aus panel.js)
   addDragAndResize(panel);
 
-  // 7) News via NewsAPI abrufen
-  // Beispiel: Top-Headlines in den USA, Sprache Englisch
-  const url = `https://newsapi.org/v2/top-headlines?country=us&apiKey=${NEWS_API_KEY}`;
+  // **X(Twitter)-RSS-Quellen** via twitrss.me
+  const feeds = [
+    'https://twitrss.me/twitter_user_to_rss/?user=RadarHits',
+    'https://twitrss.me/twitter_user_to_rss/?user=faststocknewss',
+    'https://twitrss.me/twitter_user_to_rss/?user=WatcherGuru'
+  ];
+
+  // Proxy, z. B. AllOrigins
+  // (Wenn es nicht erreichbar ist, probiere corsproxy.io oder eigenen Proxy)
+  function toProxyUrl(feedUrl) {
+    return 'https://api.allorigins.win/get?url=' + encodeURIComponent(feedUrl);
+  }
 
   try {
-    const response = await fetch(url);
-    const data = await response.json();
+    // 1) Alle Feeds parallel laden
+    const fetchPromises = feeds.map(url => fetch(toProxyUrl(url)).then(resp => resp.json()));
+    const results = await Promise.all(fetchPromises);
 
-    // 8) Checken, ob wir validen Status haben
-    if (data.status !== 'ok' || !data.articles) {
-      body.innerHTML = '<p>Fehler oder keine Daten.</p>';
-      return;
+    // 2) results[] enthält { contents: '...rss xml...' }
+    // Wir parsen jedes RSS
+    let allItems = [];
+    for (let r of results) {
+      const rssText = r.contents;
+      const parser = new DOMParser();
+      const rssXml = parser.parseFromString(rssText, 'application/xml');
+      const items = [...rssXml.querySelectorAll('item')];
+      
+      // Items in allItems pushen
+      // Mit map kannst du dir Title, Link, Datum etc. rausholen
+      items.forEach(item => {
+        const title = item.querySelector('title')?.textContent || 'Ohne Titel';
+        const link = item.querySelector('link')?.textContent || '#';
+        const pubDate = item.querySelector('pubDate')?.textContent || '';
+        // Speichere in allItems
+        allItems.push({ title, link, pubDate });
+      });
     }
 
-    // 9) Headlines ausgeben
-    let html = '<ul style="list-style:none; padding:0;">';
-    data.articles.forEach(article => {
-      // title, url
-      const title = article.title || 'Ohne Titel';
-      const link = article.url || '#';
+    // 3) Gesamte Liste sortieren nach Datum (optional)
+    // pubDate kann man z. B. mit Date.parse() in Unix-Zeit umwandeln
+    allItems.sort((a, b) => {
+      // neueste zuerst => b - a
+      return Date.parse(b.pubDate) - Date.parse(a.pubDate);
+    });
 
+    // 4) Beschränke auf x Einträge
+    // z.B. 15 Gesamt
+    allItems = allItems.slice(0, 15);
+
+    // 5) HTML-Liste bauen
+    let html = '<ul style="margin:0; padding:0; list-style:none;">';
+    allItems.forEach(item => {
       html += `
-        <li style="margin-bottom: 8px;">
-          <a href="${link}" target="_blank" style="color: #FFA500; text-decoration: none;">
-            ${title}
-          </a>
-        </li>
+      <li style="margin-bottom:8px;">
+        <a href="${item.link}" target="_blank" style="color:#FFA500; text-decoration:none;">
+          ${item.title}
+        </a>
+        <br/>
+        <small>${item.pubDate}</small>
+      </li>
       `;
     });
     html += '</ul>';
 
     body.innerHTML = html;
-
-  } catch (error) {
-    console.error('Fehler beim Laden der News:', error);
-    body.innerHTML = `<p>Fehler beim Laden: ${error.message}</p>`;
+    
+  } catch (err) {
+    console.error(err);
+    body.innerHTML = `<p>Fehler beim Laden der Tweets.<br>${err.message}</p>`;
   }
 }
