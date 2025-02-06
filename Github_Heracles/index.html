@@ -5,15 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Godel Terminal Clone – Orange Style (Resizing)</title>
   
-  <!-- Hier dein globales CSS einbinden -->
+  <!-- Globales CSS -->
   <link rel="stylesheet" href="css/styles.css" />
   
-  <!-- TradingView-Script z.B. hier laden -->
+  <!-- TradingView-Script -->
   <script src="https://s3.tradingview.com/tv.js"></script>
 </head>
 <body>
   <!-- Top Navigation Bar -->
   <div id="topBar">
+    <!-- Deine anderen Buttons, wie gehabt -->
     <button onclick="createPanel('QM')">QM</button>
     <button onclick="createPanel('N')">N</button>
     <button onclick="createPanel('G')">G</button>
@@ -21,7 +22,9 @@
     <button onclick="createPanel('TAS')">TAS</button>
     <button onclick="createChartFromInput()">Chart</button>
     <button onclick="createBoxFromInput()">Box</button>
-    <button onclick="createPanel('News')">News</button>
+    
+    <!-- Statt createPanel('News') jetzt direkt createNews() -->
+    <button onclick="createNews()">News</button> 
     <button onclick="createPanel('Chat')">Chat</button>
   </div>
   
@@ -32,10 +35,11 @@
     placeholder="Ticker eingeben (z.B. AAPL) und Enter drücken"
   />
 
-  <!-- JS: Zuerst die Teile laden, die Basisklassen/Funktionen bereitstellen, dann main.js -->
+  <!-- JS: Lade die Panel-Logik, dann Chart, Box, News und zum Schluss main.js -->
   <script src="js/panel.js"></script>
   <script src="js/chart.js"></script>
   <script src="js/box.js"></script>
+  <script src="js/news.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
