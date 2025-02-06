@@ -1,0 +1,117 @@
+/* Global – Orange Schrift auf schwarzem Background */
+body {
+  margin: 0;
+  font-family: "Courier New", Courier, monospace;
+  background-color: #000; /* Schwarz */
+  color: #FFA500; /* Orange */
+}
+
+/* Top Navigation Bar */
+#topBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background-color: #000;
+  border-bottom: 1px solid #FFA500;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  z-index: 1000;
+}
+
+#topBar button {
+  background: none;
+  border: none;
+  color: #FFA500;
+  margin-right: 15px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#topBar button:hover {
+  color: #FFB347;
+}
+
+/* Eingabefeld für Ticker/Command */
+#tickerInput {
+  position: fixed;
+  top: 60px; /* direkt unter der Top-Bar */
+  left: 10px;
+  width: calc(100% - 20px);
+  padding: 10px;
+  font-size: 16px;
+  font-family: "Courier New", Courier, monospace;
+  background-color: #000;
+  border: 1px solid #FFA500;
+  border-radius: 4px;
+  color: #FFA500;
+  z-index: 1000;
+}
+
+/* Panel-Styles */
+.panel {
+  position: absolute;
+  top: 120px;
+  left: 120px;
+  background-color: #000;
+  border: 1px solid #FFA500;
+  border-radius: 5px;
+  overflow: hidden;
+  cursor: move;
+  width: 300px;
+  height: 200px;
+}
+
+.panel-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300px; /* Basisbreite */
+  height: 200px; /* Basishöhe */
+  transform-origin: top left;
+}
+
+.panel-header {
+  height: 30px;
+  background-color: #000;
+  color: #FFA500;
+  padding: 5px 10px;
+  cursor: move;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #FFA500;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #FFA500;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.close-button:hover {
+  color: #FF4500;
+}
+
+.panel-body {
+  padding: 10px;
+  width: 100%;
+  height: calc(100% - 30px);
+  box-sizing: border-box;
+}
+
+/* Resize Handle */
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 15px;
+  height: 15px;
+  background-color: #FFA500;
+  cursor: se-resize;
+  z-index: 1001;
+}
