@@ -1,7 +1,11 @@
-// news.js (angepasst mit AllOrigins-Proxy)
+// news.js
 
+/**
+ * Erzeugt ein Panel, das aktuelle BBC-News anzeigt (RSS).
+ * Nutzt allorigins-Proxy, um CORS-Fehler zu vermeiden.
+ */
 async function createNews() {
-  // Panel wie gehabt ...
+  // 1) Panel erstellen (wie bei Box/Chart)
   const panel = document.createElement('div');
   panel.className = 'panel';
   panel.style.width = '500px';
@@ -17,7 +21,7 @@ async function createNews() {
   // Header
   const header = document.createElement('div');
   header.className = 'panel-header';
-  header.innerHTML = `<span>News: Yahoo Finance</span>`;
+  header.innerHTML = `<span>News: BBC</span>`;
 
   const closeButton = document.createElement('button');
   closeButton.className = 'close-button';
@@ -42,32 +46,32 @@ async function createNews() {
   // Panel ins DOM
   document.body.appendChild(panel);
 
-  // Drag & Resize
+  // Drag & Resize-Funktion (aus panel.js)
   addDragAndResize(panel);
 
-  // Originaler Feed
-  const originalFeedUrl = 'https://finance.yahoo.com/news/rssindex';
-  // Proxy-URL für AllOrigins
+  // 2) BBC-Feed-URL und Proxy
+  const originalFeedUrl = 'https://feeds.bbci.co.uk/news/rss.xml';
   const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(originalFeedUrl);
 
   try {
-    // Abruf via Proxy
+    // 3) Via Proxy anfragen, um CORS zu umgehen
     const response = await fetch(proxyUrl);
-    // Antwort als JSON
     const data = await response.json();
-
-    // Tatsächlicher RSS-Text ist in data.contents
+    // "contents" enthält den eigentlichen RSS-Text
     const rssText = data.contents;
-    // Parsing per DOMParser
+
+    // 4) RSS-Text parsen
     const parser = new DOMParser();
     const rssXml = parser.parseFromString(rssText, 'application/xml');
 
+    // 5) <item>-Elemente (Titel, Link usw.)
     const items = rssXml.querySelectorAll('item');
     if (!items.length) {
       body.innerHTML = `<p>Keine News gefunden.</p>`;
       return;
     }
 
+    // 6) Eine Liste bauen (z.B. die ersten 8 Einträge)
     let html = `<ul style="margin:0; padding:0; list-style-type:none;">`;
     const maxItems = 8;
     for (let i = 0; i < items.length && i < maxItems; i++) {
