@@ -1,51 +1,149 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EUR Future Optionen Prämienpreise</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        #prices { margin-top: 20px; }
-        .price-item { margin-bottom: 10px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EUR Future Optionen</title>
+  <style>
+    /* Allgemeine Styles */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #f6f9fc, #e9eff5);
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    /* Datepicker Styling */
+    .date-picker {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .date-picker label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .date-picker input[type="date"] {
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    /* Tabelle Styling */
+    .table-container {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #007bff;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+  </style>
 </head>
 <body>
-    <h1>Prämienpreise von EUR Future Optionen</h1>
-    <div id="prices">Lade Daten...</div>
-    
-    <script>
-        // Beispiel-URL – ersetze sie mit der URL deiner API (z.B. veröffentlichte Google Sheet JSON)
-        const apiUrl = 'https://deine-api-url-zur-sheet-datenquelle';
-        
-        async function fetchData() {
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    throw new Error('Netzwerkantwort war nicht ok');
-                }
-                const data = await response.json();
-                displayPrices(data);
-            } catch (error) {
-                document.getElementById('prices').innerHTML = 'Fehler beim Laden der Daten: ' + error;
-            }
-        }
-        
-        function displayPrices(data) {
-            const pricesDiv = document.getElementById('prices');
-            pricesDiv.innerHTML = '';  // Vorherigen Inhalt entfernen
-            
-            // Annahme: data ist ein Array von Objekten, z.B. { option: 'Option1', preis: 123.45 }
-            data.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'price-item';
-                div.textContent = `${item.option}: ${item.preis} EUR`;
-                pricesDiv.appendChild(div);
-            });
-        }
-        
-        // Daten beim Laden der Seite abrufen
-        window.addEventListener('DOMContentLoaded', fetchData);
-    </script>
+  <div class="container">
+    <h1>EUR Future Optionen</h1>
+    <div class="date-picker">
+      <label for="expiryDate">Wähle ein Expiry-Datum:</label>
+      <input type="date" id="expiryDate">
+    </div>
+    <div id="strikeContainer" class="table-container">
+      <!-- Hier erscheint die Tabelle mit den Strike-Preisen -->
+    </div>
+  </div>
+
+  <script>
+    // Liste der Strike-Preise als String (z.B. "0,975")
+    const strikePrices = [
+      "0,975", "0,980", "0,985", "0,990", "0,995", "1,000",
+      "1,005", "1,010", "1,015", "1,020", "1,025", "1,030",
+      "1,035", "1,040", "1,045", "1,050", "1,055", "1,060",
+      "1,065", "1,070", "1,075", "1,080", "1,085", "1,090",
+      "1,095", "1,100", "1,105", "1,110", "1,115", "1,120",
+      "1,125"
+    ];
+
+    // Funktion, um die Tabelle der Strike-Preise zu erstellen
+    function displayStrikePrices(expiryDate) {
+      const container = document.getElementById('strikeContainer');
+      container.innerHTML = ""; // Vorherigen Inhalt löschen
+
+      // Optional: Zeige das gewählte Expiry-Datum oben an
+      const dateHeader = document.createElement('h2');
+      dateHeader.textContent = "Expiry: " + new Date(expiryDate).toLocaleDateString("de-DE");
+      dateHeader.style.textAlign = "center";
+      container.appendChild(dateHeader);
+
+      // Erstelle die Tabelle
+      const table = document.createElement('table');
+
+      // Tabellenkopf
+      const headerRow = document.createElement('tr');
+      const strikeHeader = document.createElement('th');
+      strikeHeader.textContent = "Strike Preis";
+      const callHeader = document.createElement('th');
+      callHeader.textContent = "Call";
+      const putHeader = document.createElement('th');
+      putHeader.textContent = "Put";
+
+      headerRow.appendChild(strikeHeader);
+      headerRow.appendChild(callHeader);
+      headerRow.appendChild(putHeader);
+      table.appendChild(headerRow);
+
+      // Erstelle Zeilen für jeden Strike-Preis
+      strikePrices.forEach(price => {
+        const row = document.createElement('tr');
+
+        const strikeCell = document.createElement('td');
+        strikeCell.textContent = price;
+        row.appendChild(strikeCell);
+
+        // Hier kommen später deine API-Daten rein, momentan Platzhalter
+        const callCell = document.createElement('td');
+        callCell.textContent = "Platzhalter";
+        row.appendChild(callCell);
+
+        const putCell = document.createElement('td');
+        putCell.textContent = "Platzhalter";
+        row.appendChild(putCell);
+
+        table.appendChild(row);
+      });
+
+      container.appendChild(table);
+    }
+
+    // Event Listener für die Datumsauswahl
+    document.getElementById('expiryDate').addEventListener('change', (event) => {
+      const selectedDate = event.target.value;
+      if (selectedDate) {
+        displayStrikePrices(selectedDate);
+      }
+    });
+  </script>
 </body>
 </html>
