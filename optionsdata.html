@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EUR Future Optionen Prämienpreise</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #prices { margin-top: 20px; }
+        .price-item { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Prämienpreise von EUR Future Optionen</h1>
+    <div id="prices">Lade Daten...</div>
+    
+    <script>
+        // Beispiel-URL – ersetze sie mit der URL deiner API (z.B. veröffentlichte Google Sheet JSON)
+        const apiUrl = 'https://deine-api-url-zur-sheet-datenquelle';
+        
+        async function fetchData() {
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error('Netzwerkantwort war nicht ok');
+                }
+                const data = await response.json();
+                displayPrices(data);
+            } catch (error) {
+                document.getElementById('prices').innerHTML = 'Fehler beim Laden der Daten: ' + error;
+            }
+        }
+        
+        function displayPrices(data) {
+            const pricesDiv = document.getElementById('prices');
+            pricesDiv.innerHTML = '';  // Vorherigen Inhalt entfernen
+            
+            // Annahme: data ist ein Array von Objekten, z.B. { option: 'Option1', preis: 123.45 }
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'price-item';
+                div.textContent = `${item.option}: ${item.preis} EUR`;
+                pricesDiv.appendChild(div);
+            });
+        }
+        
+        // Daten beim Laden der Seite abrufen
+        window.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+</body>
+</html>
